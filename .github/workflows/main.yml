@@ -87,18 +87,12 @@ jobs:
           rm -rf .repo
           rm -rf common
 
-          aria2c -x 16 -s 16 -o prebuilts/clang/host/linux-x86/clang-r547379.tar.gz "https://github.com/topnotchfreaks/clang/releases/download/v1.0.0/clang-r547379.tar.gz"
-          mkdir -p prebuilts/clang/host/linux-x86/clang-r547379
-          tar -xzf prebuilts/clang/host/linux-x86/clang-r547379.tar.gz -C prebuilts/clang/host/linux-x86/clang-r547379
-          rm -rf prebuilts/clang/host/linux-x86/clang-r547379.tar.gz
-
           rm -rf prebuilts/clang/host/linux-x86/clang-3289846
-          rm -rf prebuilts/clang/host/linux-x86/clang-r450784e
           rm -rf prebuilts/clang/host/linux-x86/clang-stable
           
           sed -i \
            -e 's/^BRANCH=.*/BRANCH=android13-5.15/' \
-           -e 's/^CLANG_VERSION=.*/CLANG_VERSION=r547379/' \
+           -e 's/^CLANG_VERSION=.*/CLANG_VERSION=r450784e/' \
            ${{ env.kernelDir }}/${{ env.kernelName }}/build.config.constants
           
           sed -i '/^DEFCONFIG=gki_defconfig/d' ${{ env.kernelDir }}/${{ env.kernelName }}/build.config.gki
@@ -134,18 +128,18 @@ jobs:
           CONFIG_TMPFS_POSIX_ACL=y
           EOF
 
-      - name: "🔧 Setup Wild KSU with SUSFS"
+      - name: "🔧 Setup ReSukiSU with SUSFS"
         if: matrix.variant == 'ksu'
         working-directory: ./${{ env.kernelDir }}/${{ env.kernelName }}
         run: |
           rm -rf ./KernelSU ./drivers/kernelsu
           
-          echo "📦 Installing Wild KSU..."
+          echo "📦 Installing ResSukiSU..."
 
-          # Install WildKSU with SUSFS
-          curl -LSs "https://raw.githubusercontent.com/WildKernels/Wild_KSU/wild/kernel/setup.sh" | bash -s stable
+          # Install ReSukiSU with SUSFS
+          curl -LSs "https://raw.githubusercontent.com/ReSukiSU/ReSukiSU/main/kernel/setup.sh" | bash
       
-          echo "✔ Wild KSU installed successfully"
+          echo "✔ installed successfully"
           
           # Clone SUSFS4KSU for kernel patches only (not KSU integration)
           echo "📦 Cloning SUSFS4KSU for kernel patches..."
@@ -160,8 +154,8 @@ jobs:
             echo "⚠️ SUSFS patch failed — copying files manually"
           fi
 
-          echo "🔧 Applying SUSFS -> KernelSU patch..."
-          KSU_PATCH="susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
+          # echo "🔧 Applying SUSFS -> KernelSU patch..."
+          # KSU_PATCH="susfs4ksu/kernel_patches/KernelSU/10_enable_susfs_for_ksu.patch"
           
           echo "📄 Forcing SUSFS source injection..."
           
@@ -197,7 +191,7 @@ jobs:
             echo "✔ Created drivers/kernelsu symlink"
           fi
           
-          # Add Wild KSU configs with SUSFS
+          # Add KSU configs with SUSFS
           CONFIG_FILE="arch/arm64/configs/${{ env.DEFCONFIG_NAME }}"
           cat >> "$CONFIG_FILE" << 'EOF'
           CONFIG_KSU=y
@@ -222,7 +216,7 @@ jobs:
           CONFIG_KSU_SUSFS_SUS_SU=y
           EOF
           
-          echo "🎉 Wild KSU with SUSFS kernel patches fully integrated!"
+          echo "🎉 kernel patches fully integrated!"
 
       - name: "🔨 Build kernel"
         working-directory: ${{ env.WORK_DIR }}
